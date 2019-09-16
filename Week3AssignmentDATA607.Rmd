@@ -1,0 +1,185 @@
+---
+title: "Week3AssignmentDATA607"
+author: "Banu Boopalan"
+date: "9/15/2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+  ioslides_presentation: default
+  pdf_document: default
+  slidy_presentation: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Install RMySQL to load pacakge
+#install.packages("RMySQL")    <- Giving me an error when I install here so commented this out as I installed this already.
+#library(RMySQL)
+#library(DBI)
+library(dbplyr)
+library(plyr)
+library(dplyr)
+library(tidyverse)  ## loads many but not all "tidyverse" packages
+library(stringr)
+```
+
+## PROBLEM:3.1
+Copy introductory example.The vector name stores the extracted names. Use Tools to rearrange the vector so that all elements conform to the standard first_name and last_name.
+Solution: I used str_c to combine and str_extract along with pattern matching with regular expression
+
+```{r}
+raw.data <-"555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert"
+name <- unlist(str_extract_all(raw.data, "[[:alpha:].,]{2,}"))
+str(name)
+
+name1 <- str_c(name[1], name[2],sep = " ")
+name1
+
+name2 <- str_c(name[4],name[5],str_extract(name[3],"\\w+"),sep = " ")
+name2
+
+#name3 <- str_c(str_c(name[5], name[4],sep = " "), str_extract(name[3],"\\w+"), sep = "")
+#name3
+
+name4 <- str_c(name[7], name[8],sep = " ")
+name4
+
+name5 <- str_c(name[9], name[10],sep = " ")
+name5
+
+name6 <- str_c(name[12], str_extract(name[11],"\\w+"), sep = " ")
+name6
+
+name7 <- str_c(name[14], name[15],sep = " ")
+name7
+
+namefinal <- data.frame(c(name1,name2,name4,name5,name6,name7))
+namefinal 
+
+```
+
+## PROBLEM:3.2
+Construct a logical vector indicating whether a character has a title (i.e, Rev. and Dr.)
+Solution: I used grepl to check if pattern is matched to create the logical vector and then created a dataframe called newdata to show the logicalvector
+
+```{r}
+newname <- unlist(str_extract_all(raw.data, "[[:alpha:]., ]{2,}"))
+newname
+logicalvector1 <-  grepl("Dr.",newname[1:6]) 
+logicalvector2 <-  grepl("Rev.",newname[1:6]) 
+newdata <- data.frame(name=newname,isDr=logicalvector1, isRev=logicalvector2)
+newdata
+```
+
+
+## PROBLEM:3.3
+Construct a logical vector indicating whether a character has a second name
+Solution: I used str_detect to check if the lastname for each character was part of the name column in my dataframe and create a logical vector to show that it is part of the name which means that the character has a second name (I checked that second name is surname or lastname).
+
+```{r}
+myname <- data.frame(name = c(name1,name2,name4,name5,name6,name7))
+myname
+cbinded_df <- data.frame(lastname = c("Szyslak","Burns","Lovejoy","Flanders","Simpson","Hibbert"))
+cbinded_df
+myfinalframe <- data.frame (myname$name, issecondname = c(str_detect(as.character(myname$name),as.character(cbinded_df$lastname))))
+myfinalframe
+```
+
+
+## PROBLEM:4.1
+#Pattern : #1	[0-9]+\\$
+
+Note - The 2 backslash are not printing above in the markdown section here but I used the correct pattern below in the code chunk
+
+DESCRIBE TYPES OF STRINGS : The above pattern has a digit class in [0-9] and + is the quantifier matches the digit preceding atleast once up until the end of the string marked by the dollar sign as the end . The 3rd and 5th strings do not match because the digits are after the dollar sign and the digits don't immediately precede the $ on the 5th string.
+
+```{r}
+#Construct and example that matches the regular expression
+
+# DESCRIBE TYPES OF STRINGS : The above pattern has a digit class in [0-9] and + is the quantifier matches the digit preceding atleast once up until the end of the string marked by the '$' . The 3rd and 5th strings do not match because the digits are after the '$' and the digits don't immediately precede the $ on the 5th string.
+
+data1 <- c ("+%%abc345%%&0$", "0123$%", "abcd$123","abcd$12+3$", "0123\\))$%")
+unlist(str_extract_all(data1,"[0-9]+\\$"))
+str_match(data1, "[0-9]+\\$")
+```
+
+## PROBLEM:4.2
+#Pattern : #2	\\b[a-z]{1,4}\\b
+
+Note - The 2 backslash are not printing above in the markdown section here but I used the correct pattern below in the code chunk
+
+DESCRIBE TYPES OF STRINGS : The  backslash and b marks the word boundary and this pattern matches the alpha characters 1 upto 4 times so in the string below the 123zuv did not match because the word within the boundary should not include any digits. For the one that is beabi it is more than 4 letters so it is not matched
+
+```{r}
+#Construct and example that matches the regular expression
+
+# DESCRIBE TYPES OF STRINGS : The \b marks the word boundary and this pattern matches the alpha characters 1 upto 4 times so in the string below the 123zuv did not match because the word within the boundary should not include any digits. For the one that is beabi it is more than 4 letters so it is not matched
+
+data2 <- c ("123zuv is beabisme_ume12345 sim678 zuv ume beabi beab")
+unlist(str_extract_all(data2,"\\b[a-z]{1,4}\\b"))
+str_match_all(data2, "\\b[a-z]{1,4}\\b")
+```
+
+
+## PROBLEM:4.3
+#Pattern : #3	.*?\\.txt$
+Note - The 2 backslash are not printing above in the markdown section here but I used the correct pattern below in the code chunk
+
+DESCRIBE TYPES OF STRINGS : $ is the anchor here so strings that end with .txt is matched. The ? along with the period and asterix is lazy quantifier. It  matches upto 0 times and does more computation to match until the pattern is found. In this case, the data3, the quantifier matches all preceding up until the .txt at the end.
+
+```{r}
+#Construct and example that matches the regular expression
+
+# DESCRIBE TYPES OF STRINGS : $ is the anchor here so strings that end with .txt is matched. The ? along with the period and asterix is lazy quantifier. It  matches upto 0 times and does more computation to match until the pattern is found. In this case, the data3, the quantifier matches all preceding up until the .txt at the end.
+
+data3 <- c ("U%%.txt uin99%%.txt sweet.xyz x.txtuin99 u.txt","U%%.txt uin99%%.txt sweet.xyz x.txtuin99 .txt", "U%%.txt uin99%%.txt sweet.xyz x.txtuin99 .uvw" )
+data3a <- c ("U%%.txt","uin99%%.txt","sweet.xyz"," x.txtuin99"," u.txt")
+unlist(str_extract(data3a,".*?\\.txt$"))
+#unlist(str_extract(data3,".*?\\.txt$"))
+str_match(data3a, ".*?\\.txt$")
+str_match(data3, ".*?\\.txt$")
+
+```
+
+## PROBLEM:4.4
+#Pattern : #4	\\d{2}/\\d{2}/\\d{4}
+
+Note - The 2 backslash are not printing above in the markdown section here but I used the correct pattern below in the code chunk
+
+DESCRIBE TYPES OF STRINGS : This pattern matches digits in a certain format provided above
+
+```{r}
+data4 <- c ("09/10/4500","19/2034/4500","1/3/45","10/89/367" )
+data4a <- c ("09/10/4500","19/2034/4500","1/3/45","10/89/3671" )
+
+unlist(str_extract(data4,"\\d{2}/\\d{2}/\\d{4}"))
+unlist(str_extract(data4a,"\\d{2}/\\d{2}/\\d{4}"))
+str_match(data4a, "\\d{2}/\\d{2}/\\d{4}")
+
+```
+
+## PROBLEM:4.5
+#Pattern : #5	<(.+?)>.+?</\\1>
+
+Note - The 2 backslash are not printing above in the markdown section here but I used the correct pattern below in the code chunk
+
+DESCRIBE TYPES OF STRINGS : This pattern matches a group with a quantifier within the tag shown within the 2 arrow brackets. The \1 means to refer and duplicate groups that occur earlier in the pattern. So here only the strings where a match is found on the tag with </1234meta.xys> is matched. Similarly on data6, it matched the <I> and </I> and extracted all in between.
+
+```{r}
+data5 <- c("<meta>", "1234meta.xyz>.ui", "<1234meta.xyz>me</1>","<1234meta.xyz>me.me</1234meta.xyz>", "<x>myname</y> <x>myname</z>")
+data6 <- c("<I>might<like> <to> <go> <to movies> then </I> </like> </to> ")
+unlist(str_extract_all(data6,"<(.+?)>.+?</\\1>"))
+str_match_all(data6,"<(.+?)>.+?</\\1>")
+str_match_all(data5,"<(.+?)>.+?</\\1>")
+```
+
+## Extra Credit
+#Hidden Message: CONGRATULATIONS YOU ARE A SUPER NERD!  
+I am not sure how to extract the ! punctuation along with the other characters here but was able to extract the message
+
+
+```{r}
+snippet <- "clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0TanwoUwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigOd6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr"
+str_extract_all(snippet,"[A-Z]+")
+```
